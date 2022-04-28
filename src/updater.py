@@ -4,8 +4,8 @@ from typing import Dict
 import os
 import requests
 import mimetypes
-from datetime import date
 
+from tqdm import tqdm
 from notion.client import NotionClient
 from notion.block import EmbedOrUploadBlock
 from notion.operations import build_operation
@@ -46,7 +46,8 @@ class PhotoUpdater:
         self.client.submit_transaction([op1, op2])
     
     def upload(self) -> None:
-        for entry in self.photos.values():
+        print("Creating new entries and Uploading photos ...")
+        for entry in tqdm(self.photos.values()):
             # Create a new DB entry for each new photo
             row: CollectionRowBlock = self.photo_db.collection.add_row()
             # Fill properties
@@ -54,7 +55,7 @@ class PhotoUpdater:
             row.photographer = entry.photographer
             row.genres = entry.genres
             # Convert ISO time to a python datetime object
-            row.date = date.fromisoformat(entry.date)
+            row.date = entry.date
             # Upload the photo from local path
             row.file = 'img'
             self.upload_file_to_row_property(row, entry.file, "File")

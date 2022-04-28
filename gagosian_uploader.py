@@ -3,6 +3,7 @@ from typing import Tuple
 import re
 import os
 import requests
+from datetime import date
 from bs4 import BeautifulSoup
 
 from src.updater import PhotoUpdater
@@ -34,7 +35,7 @@ class GagosianUploader(PhotoUpdater):
         
 
     def photo_crawler(self):
-        print(f"Scraping photos from {self.artist_name} on Gagosian.com ...")
+        print(f"Scraping photos of {self.artist_name} from gagosian.com ...")
 
         print("     Preparing images urls ...") 
         image_soups = self.soup.find_all('div', {'class': "slide__image"})
@@ -72,7 +73,7 @@ class GagosianUploader(PhotoUpdater):
                 photographer=artist_name,
                 file=img_path,
                 genres='',
-                date=f"{year}-01-01"
+                date=date.fromisoformat(f"{year}-01-01")
             )
         print(f"     DONE! {len(image_urls)} images gathered") 
 

@@ -8,7 +8,7 @@ class PhotoEntry:
     photographer: str
     file: str
     genres: str
-    date: str
+    date: date
 
 @dataclass
 class PaletteEntry:
