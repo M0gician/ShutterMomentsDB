@@ -6,8 +6,8 @@ from tqdm import tqdm
 from datetime import date, datetime
 from bs4 import BeautifulSoup
 
-from src.updater import PhotoUpdater
-from src.types import PhotoEntry
+from src.essential.updater import PhotoUpdater
+from src.essential.types import PhotoEntry
 
 
 class MOMAUploader(PhotoUpdater):
@@ -16,6 +16,7 @@ class MOMAUploader(PhotoUpdater):
     BASE_SEARCH_URL_SUFFIX = "&classifications=any&date_begin=Pre-1850&date_end=2022&with_images=1"
     BASE_DIR = os.getcwd()
     PHOTO_DIR = os.path.join(BASE_DIR, "photos")
+    DATE_PREFIX = ('Seasons of', 'c.')
 
     def __init__(self, artist_name: str, max_page: int):
         super().__init__()
@@ -62,22 +63,29 @@ class MOMAUploader(PhotoUpdater):
             captions = soup.find_all('span', {'class': r"typography"})
             artist_name = captions[0].text.strip()
             title = captions[1].text.strip()
-
             year = captions[2].text.strip()
-            year = year[3:] if year.startswith('c. ') else year
-            # Only year is available
+            # Remove unnecessary prefixes
+            for prefix in self.DATE_PREFIX:
+                if year.startswith(prefix):
+                    year = year[len(prefix):].strip()
+                    break
+            # Handle different year formats
             if len(year) == 4:
                 year = date.fromisoformat(f"{year}-01-01")
             elif str.count(year, '-') == 1:
                 year = date.fromisoformat(f"{year[:4]}-01-01")
-            # Month and year are available
-            elif ',' not in year:
-                year = datetime.strptime(year, '%B %Y').date()
-            # Month day, year are available
             elif str.count(year, '-') == 2:
                 year = date.fromisoformat(year)
+            elif ',' in year:
+                if not year[0].isdigit():
+                    year = datetime.strptime(year, '%B %d, %Y').date()
+                else:
+                    year = date.fromisoformat(f"{year[:4]}-01-01")
+            elif ',' not in year:
+                if not year[0].isdigit():
+                    year = datetime.strptime(year, '%B %Y').date()
             else:
-                year = datetime.strptime(year, '%B %d, %Y').date()
+                raise ValueError(f"Unknown year format: {year}")
 
             r = requests.get(img_src, allow_redirects=True)
             img_name = f"{artist_name}-{i}.jpg"

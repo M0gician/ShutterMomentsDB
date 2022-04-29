@@ -11,8 +11,8 @@ from notion.block import EmbedOrUploadBlock
 from notion.operations import build_operation
 from notion.collection import CollectionRowBlock
 
-from src.types import PhotoEntry
-from src.consts import TOKEN, PHOTO_DATABASE_URL
+from .types import PhotoEntry
+from .consts import TOKEN, PHOTO_DATABASE_URL
 
 
 class PhotoUpdater:
@@ -64,3 +64,4 @@ class PhotoUpdater:
                 EmbedOrUploadBlock, caption=row.name,
             )
             embedded_image.upload_file(path=entry.file)
+        print("Done!")

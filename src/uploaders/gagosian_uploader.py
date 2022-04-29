@@ -3,11 +3,12 @@ from typing import Tuple
 import re
 import os
 import requests
+from tqdm import tqdm
 from datetime import date
 from bs4 import BeautifulSoup
 
-from src.updater import PhotoUpdater
-from src.types import PhotoEntry
+from src.essential.updater import PhotoUpdater
+from src.essential.types import PhotoEntry
 
 
 class GagosianUploader(PhotoUpdater):
@@ -17,7 +18,7 @@ class GagosianUploader(PhotoUpdater):
 
     def __init__(self, artist_name: str):
         super().__init__()
-        self.artist_name = artist_name
+        self.artist_name = "-".join(artist_name.lower().split(" "))
         self.url = self.BASE_URL + artist_name
         self.rqst = requests.get(self.url)
         self.soup = BeautifulSoup(self.rqst.content, 'html.parser')
@@ -37,7 +38,6 @@ class GagosianUploader(PhotoUpdater):
     def photo_crawler(self):
         print(f"Scraping photos of {self.artist_name} from gagosian.com ...")
 
-        print("     Preparing images urls ...") 
         image_soups = self.soup.find_all('div', {'class': "slide__image"})
         image_urls = [
             tmp.find('img')['srcset'].split(',')[0] for tmp in image_soups
@@ -46,7 +46,6 @@ class GagosianUploader(PhotoUpdater):
             self.image_regex.match(tmp).group() for tmp in image_urls
         ]
         
-        print("     Preparing images captions ...") 
         captions_soups = self.soup.find_all('div', {'class': "slide__caption"})
         image_captions = [
             tmp.find('p', {'class': 'caption_line_1'}).get_text() for tmp in captions_soups
@@ -55,8 +54,7 @@ class GagosianUploader(PhotoUpdater):
             self.caption_parser(raw_caption) for raw_caption in image_captions
         ]
 
-        print("     Downloading images ...") 
-        for i in range(len(image_urls)):
+        for i in tqdm(range(len(image_urls))):
             image_url = image_urls[i]
             artist_name, title, year = image_captions[i]
             r = requests.get(image_url, allow_redirects=True)
@@ -79,6 +77,6 @@ class GagosianUploader(PhotoUpdater):
 
 
 if __name__ == "__main__":
-    uploader = GagosianUploader('jeff-wall')
+    uploader = GagosianUploader('Jeff Wall')
     uploader.photo_crawler()
     uploader.upload()
