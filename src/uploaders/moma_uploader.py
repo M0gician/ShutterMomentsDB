@@ -62,6 +62,8 @@ class MOMAUploader(PhotoUpdater):
         
             captions = soup.find_all('span', {'class': r"typography"})
             artist_name = captions[0].text.strip()
+            if artist_name.lower() != self.artist_name.lower():
+                continue
             title = captions[1].text.strip()
             year = captions[2].text.strip()
             # Remove unnecessary prefixes
